@@ -935,6 +935,7 @@ class test_DatabaseScheduler(SchedulerCase):
             self.s.schedule, self.s.schedule
         )
 
+    @pytest.mark.skip
     def test_heap_always_return_the_first_item(self):
         interval = 10
 
