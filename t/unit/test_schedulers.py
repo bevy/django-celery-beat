@@ -99,7 +99,7 @@ class SchedulerCase:
             args=(),
             relative=False,
             kwargs={},
-            options={'queue': 'extra_queue'}
+            options={'queue': 'extra_queue', **options},
         )
 
     def create_model(self, Model=PeriodicTask, **kwargs):
@@ -602,10 +602,27 @@ class test_DatabaseSchedulerFromAppConf(SchedulerCase):
         assert 'celery.backend_cleanup' in sched
         assert self.entry_name not in sched
 
+<<<<<<< HEAD
     def test_periodic_task_model_schedule_type_change(self):
         self.m1.interval = None
         self.m1.crontab = self.create_crontab_schedule()
         self.m1.save()
+=======
+    def test_periodic_task_model_attributes_set_from_conf(self):
+        start_time = make_aware(datetime.now())
+        entry2_name, entry2 = self.create_conf_entry(
+            description='test-periodic-task',
+            enabled=False,
+            start_time=start_time,
+        )
+        self.app.conf.beat_schedule[entry2_name] = entry2
+        self.Scheduler(app=self.app)
+        periodic_task = PeriodicTask.objects.get(name=entry2_name)
+        assert periodic_task.description == 'test-periodic-task'
+        assert not periodic_task.enabled
+        assert periodic_task.start_time == start_time
+
+>>>>>>> 898a84a ([SGP-21988] test: add scheduler test)
 
         self.Scheduler(app=self.app)
         self.m1.refresh_from_db()
