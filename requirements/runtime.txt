@@ -1,3 +1,1 @@
-celery
-Django>=2.2,<4.0
-ephem
+Django>=2.2,<6.0
