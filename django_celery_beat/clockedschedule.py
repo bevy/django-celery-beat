@@ -2,10 +2,11 @@
 
 from celery import schedules
 from celery.utils.time import maybe_make_aware
+
 from .utils import NEVER_CHECK_TIMEOUT
 
 
-class clocked(schedules.BaseSchedule):
+class clocked(schedules.BaseSchedule):  # noqa: PLW1641
     """clocked schedule.
 
     Depends on PeriodicTask one_off=True
@@ -14,7 +15,7 @@ class clocked(schedules.BaseSchedule):
     def __init__(self, clocked_time, nowfun=None, app=None):
         """Initialize clocked."""
         self.clocked_time = maybe_make_aware(clocked_time)
-        super(clocked, self).__init__(nowfun=nowfun, app=app)
+        super().__init__(nowfun=nowfun, app=app)
 
     def remaining_estimate(self, last_run_at):
         return self.clocked_time - self.now()
@@ -27,7 +28,7 @@ class clocked(schedules.BaseSchedule):
         return schedules.schedstate(is_due=False, next=remaining_s)
 
     def __repr__(self):
-        return '<clocked: {}>'.format(self.clocked_time)
+        return f'<clocked: {self.clocked_time}>'
 
     def __eq__(self, other):
         if isinstance(other, clocked):

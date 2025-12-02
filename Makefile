@@ -1,12 +1,11 @@
 PROJ=django_celery_beat
 PGPIDENT="Celery Security Team"
 PYTHON=python
-PYTEST=py.test
+PYTEST=pytest
 GIT=git
 TOX=tox
 ICONV=iconv
 FLAKE8=flake8
-FLAKEPLUS=flakeplus
 PYDOCSTYLE=pydocstyle
 SPHINX2RST=sphinx2rst
 
@@ -18,7 +17,6 @@ CONTRIBUTING=CONTRIBUTING.rst
 CONTRIBUTING_SRC="docs/contributing.rst"
 SPHINX_HTMLDIR="${SPHINX_BUILDDIR}/html"
 DOCUMENTATION=Documentation
-FLAKEPLUSTARGET=2.7
 
 TESTDIR=t
 
@@ -36,7 +34,6 @@ help:
 	@echo "    contribcheck     - Check CONTRIBUTING.rst encoding"
 	@echo "    flakes --------  - Check code for syntax and style errors."
 	@echo "      flakecheck     - Run flake8 on the source code."
-	@echo "      flakepluscheck - Run flakeplus on the source code."
 	@echo "      pep257check    - Run flakeplus on the source code."
 	@echo "readme               - Regenerate README.rst file."
 	@echo "contrib              - Regenerate CONTRIBUTING.rst file"
@@ -45,7 +42,7 @@ help:
 	@echo "  clean ------------ - Non-destructive clean"
 	@echo "    clean-pyc        - Remove .pyc/__pycache__ files"
 	@echo "    clean-docs       - Remove documentation build artifacts."
-	@echo "    clean-build      - Remove setup artifacts."
+	@echo "    clean-build      - Remove build artifacts."
 	@echo "bump                 - Bump patch version number."
 	@echo "bump-minor           - Bump minor version number."
 	@echo "bump-major           - Bump major version number."
@@ -65,7 +62,9 @@ bump-major:
 	bumpversion major
 
 release:
-	python setup.py register sdist bdist_wheel upload --sign --identity="$(PGPIDENT)"
+	python -m pip install --upgrade build twine
+	python -m build
+	twine upload --sign --identity="$(PGPIDENT) dist/*"
 
 Documentation:
 	(cd "$(SPHINX_DIR)"; $(MAKE) html)
@@ -90,16 +89,10 @@ flakecheck:
 flakediag:
 	-$(MAKE) flakecheck
 
-flakepluscheck:
-	$(FLAKEPLUS) --$(FLAKEPLUSTARGET) "$(PROJ)" "$(TESTDIR)"
-
-flakeplusdiag:
-	-$(MAKE) flakepluscheck
-
 pep257check:
 	$(PYDOCSTYLE) "$(PROJ)"
 
-flakes: flakediag flakeplusdiag pep257check
+flakes: flakediag pep257check
 
 clean-readme:
 	-rm -f $(README)
@@ -139,13 +132,13 @@ test-all: clean-pyc
 	$(TOX)
 
 test:
-	$(PYTHON) setup.py test
+	$(PYTHON) -m $(PYTEST)
 
 cov:
 	(cd $(TESTDIR); $(PYTEST) -x --cov="$(PROJ)" --cov-report=html)
 
 build:
-	$(PYTHON) setup.py sdist bdist_wheel
+	$(PYTHON) -m build
 
 distcheck: lint test clean
 

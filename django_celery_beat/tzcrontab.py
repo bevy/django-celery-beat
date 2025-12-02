@@ -1,54 +1,44 @@
 """Timezone aware Cron schedule Implementation."""
-from celery import schedules
-
 from collections import namedtuple
-from datetime import datetime
-import pytz
+from datetime import datetime, timezone
 
+from celery import schedules
 
 schedstate = namedtuple('schedstate', ('is_due', 'next'))
 
 
-class TzAwareCrontab(schedules.crontab):
+class TzAwareCrontab(schedules.crontab):  # noqa: PLW1641
     """Timezone Aware Crontab."""
 
     def __init__(
             self, minute='*', hour='*', day_of_week='*',
-            day_of_month='*', month_of_year='*', tz=pytz.utc, app=None
+            day_of_month='*', month_of_year='*', tz=timezone.utc, app=None
     ):
         """Overwrite Crontab constructor to include a timezone argument."""
         self.tz = tz
 
         nowfun = self.nowfunc
 
-        super(TzAwareCrontab, self).__init__(
+        super().__init__(
             minute=minute, hour=hour, day_of_week=day_of_week,
             day_of_month=day_of_month,
             month_of_year=month_of_year, nowfun=nowfun, app=app
         )
 
     def nowfunc(self):
-        return self.tz.normalize(
-            pytz.utc.localize(datetime.utcnow())
-        )
+        return datetime.now(self.tz)
 
     def is_due(self, last_run_at):
         """Calculate when the next run will take place.
 
-        Return tuple of (is_due, next_time_to_check).
-        The last_run_at argument needs to be timezone aware.
+        Return tuple of ``(is_due, next_time_to_check)``.
+        The ``last_run_at`` argument needs to be timezone aware.
 
         """
         # convert last_run_at to the schedule timezone
         last_run_at = last_run_at.astimezone(self.tz)
 
-        rem_delta = self.remaining_estimate(last_run_at)
-        rem = max(rem_delta.total_seconds(), 0)
-        due = rem == 0
-        if due:
-            rem_delta = self.remaining_estimate(self.now())
-            rem = max(rem_delta.total_seconds(), 0)
-        return schedstate(due, rem)
+        return super().is_due(last_run_at)
 
     # Needed to support pickling
     def __repr__(self):
